@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jobs - Job Matching Platform</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f9fafb; }
+    nav { background: #4f46e5; padding: 16px 40px; display: flex; justify-content: space-between; align-items: center; }
+    nav h1 { color: white; font-size: 20px; }
+    nav a { color: white; text-decoration: none; margin-left: 20px; font-size: 15px; }
+    .container { max-width: 800px; margin: 40px auto; padding: 24px; }
+    h2 { color: #4f46e5; margin-bottom: 24px; font-size: 32px; }
+    .job-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+    .job-card h3 { color: #111827; font-size: 20px; margin-bottom: 8px; }
+    .job-card p { color: #6b7280; margin-bottom: 12px; }
+    .skills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .skill { background: #ede9fe; color: #4f46e5; padding: 4px 12px; border-radius: 20px; font-size: 13px; }
+    .deadline { color: #9ca3af; font-size: 13px; margin-bottom: 16px; }
+    .btn { background: #4f46e5; color: white; padding: 8px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    .btn:hover { background: #4338ca; }
+    .loading { text-align: center; padding: 40px; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <nav>
+    <h1>Job Matching Platform</h1>
+    <div>
+      <a href="index.html">Home</a>
+      <a href="jobs.html">Jobs</a>
+      <a href="login.html">Login</a>
+      <a href="register.html">Register</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h2>All Jobs</h2>
+    <div id="jobs-list">
+      <p class="loading">Loading jobs...</p>
+    </div>
+  </div>
+
+  <script>
+    async function loadJobs() {
+      const response = await fetch('http://localhost:3001/jobs');
+      const jobs = await response.json();
+      const container = document.getElementById('jobs-list');
+
+      if (jobs.length === 0) {
+        container.innerHTML = '<p class="loading">No jobs posted yet.</p>';
+        return;
+      }
+
+      container.innerHTML = jobs.map(job => `
+        <div class="job-card">
+          <h3>${job.title}</h3>
+          <p>${job.description}</p>
+          <div class="skills">
+            ${job.requiredSkills.map(skill => `<span class="skill">${skill}</span>`).join('')}
+          </div>
+          <p class="deadline">Deadline: ${new Date(job.deadline).toLocaleDateString()}</p>
+          <button class="btn">View & Apply</button>
+        </div>
+      `).join('');
+    }
+
+    loadJobs();
+  </script>
+</body>
+</html>

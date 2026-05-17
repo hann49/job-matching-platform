@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Job Matching Platform</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f9fafb; }
+    nav { background: #4f46e5; padding: 16px 40px; display: flex; justify-content: space-between; align-items: center; }
+    nav h1 { color: white; font-size: 20px; }
+    nav a { color: white; text-decoration: none; margin-left: 20px; font-size: 15px; }
+    .container { max-width: 500px; margin: 60px auto; background: white; padding: 40px; border-radius: 12px; border: 1px solid #e5e7eb; }
+    h2 { color: #4f46e5; margin-bottom: 24px; text-align: center; }
+    label { display: block; margin-bottom: 6px; color: #374151; font-size: 14px; }
+    input { width: 100%; padding: 10px; margin-bottom: 16px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 15px; }
+    button { width: 100%; background: #4f46e5; color: white; padding: 12px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+    button:hover { background: #4338ca; }
+    .register-link { text-align: center; margin-top: 16px; font-size: 14px; color: #6b7280; }
+    .register-link a { color: #4f46e5; text-decoration: none; }
+    .message { text-align: center; margin-top: 16px; padding: 10px; border-radius: 8px; display: none; }
+    .success { background: #d1fae5; color: #065f46; }
+    .error { background: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body>
+  <nav>
+    <h1>Job Matching Platform</h1>
+    <div>
+      <a href="index.html">Home</a>
+      <a href="jobs.html">Jobs</a>
+      <a href="login.html">Login</a>
+      <a href="register.html">Register</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h2>Welcome Back!</h2>
+
+    <label>Email</label>
+    <input type="email" id="email" placeholder="Enter your email" />
+
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Enter your password" />
+
+    <button onclick="login()">Login</button>
+
+    <div class="message" id="message"></div>
+
+    <div class="register-link">
+      Don't have an account? <a href="register.html">Register here</a>
+    </div>
+  </div>
+
+  <script>
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      const response = await fetch('http://localhost:3001/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+      const message = document.getElementById('message');
+      message.style.display = 'block';
+
+      if (response.ok) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        message.className = 'message success';
+        message.textContent = 'Login successful! Redirecting...';
+        setTimeout(() => window.location.href = 'jobs.html', 1500);
+      } else {
+        message.className = 'message error';
+        message.textContent = data.message || 'Login failed!';
+      }
+    }
+  </script>
+</body>
+</html>
