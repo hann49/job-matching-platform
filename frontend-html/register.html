@@ -21,6 +21,33 @@
     .message { text-align: center; margin-top: 16px; padding: 10px; border-radius: 8px; display: none; }
     .success { background: #d1fae5; color: #065f46; }
     .error { background: #fee2e2; color: #991b1b; }
+.password-container {
+  position: relative;
+  width: 100%;
+}
+
+.password-container input {
+  width: 100%;
+  padding: 10px;
+  padding-right: 40px;
+  margin-bottom: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  cursor: pointer;
+  font-size: 18px;
+  user-select: none;
+}
+
+.toggle-password:hover {
+  opacity: 0.7;
+}
   </style>
 </head>
 <body>
@@ -44,7 +71,10 @@
     <input type="email" id="email" placeholder="Enter your email" />
 
     <label>Password</label>
-    <input type="password" id="password" placeholder="Enter your password" />
+    <div class="password-container">
+      <input type="password" id="password" placeholder="Enter your password" />
+      <span class="toggle-password" onclick="togglePassword('password')">👁️</span>
+    </div>
 
     <label>I am a</label>
     <select id="role">
@@ -62,6 +92,18 @@
   </div>
 
   <script>
+function togglePassword(fieldId) {
+  const field = document.getElementById(fieldId);
+  const toggleIcon = event.target;
+  
+  if (field.type === 'password') {
+    field.type = 'text';
+    toggleIcon.textContent = '👁️‍🗨️'; // Closed eye when showing
+  } else {
+    field.type = 'password';
+    toggleIcon.textContent = '👁️'; // Open eye when hidden
+  }
+}
     async function register() {
       const fullName = document.getElementById('fullName').value;
       const email = document.getElementById('email').value;

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile - Job Matching Platform</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f9fafb; }
+    nav { background: #4f46e5; padding: 16px 40px; display: flex; justify-content: space-between; align-items: center; }
+    nav h1 { color: white; font-size: 20px; }
+    nav a { color: white; text-decoration: none; margin-left: 20px; font-size: 15px; cursor: pointer; }
+    nav a:hover { text-decoration: underline; }
+    .container { max-width: 700px; margin: 40px auto; background: white; padding: 40px; border-radius: 12px; border: 1px solid #e5e7eb; }
+    h2 { color: #4f46e5; margin-bottom: 24px; }
+    .profile-info { margin-bottom: 30px; padding: 20px; background: #f3f4f6; border-radius: 8px; }
+    .info-row { margin-bottom: 12px; }
+    .info-label { font-weight: bold; color: #374151; }
+    .info-value { color: #6b7280; font-size: 16px; }
+    .skills-section { margin: 30px 0; }
+    .skills-section h3 { color: #374151; margin-bottom: 12px; font-size: 16px; }
+    .skills-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .skill-tag { background: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 20px; font-size: 14px; }
+    .no-skills { color: #9ca3af; font-style: italic; }
+    .buttons { display: flex; gap: 12px; margin-top: 30px; }
+    button { padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; }
+    .btn-primary { background: #4f46e5; color: white; }
+    .btn-primary:hover { background: #4338ca; }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background: #d1d5db; }
+    .message { margin-top: 16px; padding: 12px; border-radius: 8px; display: none; }
+    .success { background: #d1fae5; color: #065f46; }
+    .error { background: #fee2e2; color: #991b1b; }
+    .edit-form { display: none; margin-top: 20px; padding: 20px; background: #f3f4f6; border-radius: 8px; }
+    .edit-form input { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #e5e7eb; border-radius: 8px; }
+    .edit-form button { width: 100%; }
+  </style>
+</head>
+<body>
+  <nav>
+    <h1>Job Matching Platform</h1>
+    <div>
+      <a href="index.html">Home</a>
+      <a href="jobs.html">Jobs</a>
+      <a href="profile.html">Profile</a>
+      <a onclick="logout()">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h2>My Profile</h2>
+
+    <!-- Profile Information -->
+    <div class="profile-info">
+      <div class="info-row">
+        <span class="info-label">Name:</span>
+        <span class="info-value" id="profileName">Loading...</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Email:</span>
+        <span class="info-value" id="profileEmail">Loading...</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Role:</span>
+        <span class="info-value" id="profileRole">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Skills Section -->
+    <div class="skills-section">
+      <h3>📚 Your Skills</h3>
+      <div class="skills-list" id="skillsList">
+        <span class="no-skills">No skills added yet. Click "Add Skills" to get started!</span>
+      </div>
+    </div>
+
+    <!-- Edit Form (Hidden by default) -->
+    <div class="edit-form" id="editForm">
+      <h3>Add New Skill</h3>
+      <input type="text" id="newSkill" placeholder="Enter skill name (e.g., React, JavaScript, etc.)">
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-primary" onclick="addSkill()" style="flex: 1;">Add Skill</button>
+        <button class="btn-secondary" onclick="cancelEdit()" style="flex: 1;">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="buttons">
+      <button class="btn-primary" onclick="showEditForm()">✏️ Add Skills</button>
+      <button class="btn-secondary" onclick="goToApplications()">📋 My Applications</button>
+    </div>
+
+    <div class="message" id="message"></div>
+  </div>
+
+  <script>
+    // Load profile on page load
+    window.onload = function() {
+      loadProfile();
+    };
+
+    // Load profile data
+    function loadProfile() {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = localStorage.getItem('token');
+
+      if (!token || !user) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // Display basic info
+      document.getElementById('profileName').textContent = user.name || 'Not set';
+      document.getElementById('profileEmail').textContent = user.email || 'Not set';
+      document.getElementById('profileRole').textContent = user.role === 'employer' ? 'Employer' : 'Job Seeker';
+
+      // Load skills from backend
+      loadSkills();
+    }
+
+    // Load skills from backend
+    async function loadSkills() {
+      const token = localStorage.getItem('token');
+      try {
+        const response = await fetch('http://localhost:3001/profiles/skills', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          displaySkills(data.skills || []);
+        } else {
+          displaySkills([]);
+        }
+      } catch (error) {
+        console.error('Error loading skills:', error);
+        displaySkills([]);
+      }
+    }
+
+    // Display skills
+    function displaySkills(skills) {
+      const skillsList = document.getElementById('skillsList');
+      if (skills.length === 0) {
+        skillsList.innerHTML = '<span class="no-skills">No skills added yet. Click "Add Skills" to get started!</span>';
+      } else {
+        skillsList.innerHTML = skills.map(skill => `
+          <div class="skill-tag">
+            ${skill}
+            <button onclick="removeSkill('${skill}')" style="background: none; border: none; color: inherit; cursor: pointer; margin-left: 8px; font-weight: bold;">×</button>
+          </div>
+        `).join('');
+      }
+    }
+
+    // Show edit form
+    function showEditForm() {
+      document.getElementById('editForm').style.display = 'block';
+      document.getElementById('newSkill').focus();
+    }
+
+    // Cancel edit
+    function cancelEdit() {
+      document.getElementById('editForm').style.display = 'none';
+      document.getElementById('newSkill').value = '';
+    }
+
+    // Add skill
+    async function addSkill() {
+      const skill = document.getElementById('newSkill').value.trim();
+      if (!skill) {
+        showMessage('Please enter a skill name!', 'error');
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      try {
+        const response = await fetch('http://localhost:3001/profiles/skills', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ skill })
+        });
+
+        if (response.ok) {
+          showMessage('Skill added successfully! ✅', 'success');
+          document.getElementById('newSkill').value = '';
+          cancelEdit();
+          loadSkills();
+        } else {
+          const data = await response.json();
+          showMessage(data.message || 'Failed to add skill!', 'error');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        showMessage('Error adding skill!', 'error');
+      }
+    }
+
+    // Remove skill
+    async function removeSkill(skill) {
+      if (!confirm(`Remove skill "${skill}"?`)) return;
+
+      const token = localStorage.getItem('token');
+      try {
+        const response = await fetch(`http://localhost:3001/profiles/skills/${skill}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          showMessage('Skill removed! ✅', 'success');
+          loadSkills();
+        } else {
+          showMessage('Failed to remove skill!', 'error');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        showMessage('Error removing skill!', 'error');
+      }
+    }
+
+    // Go to applications
+    function goToApplications() {
+      window.location.href = 'applications.html';
+    }
+
+    // Show message
+    function showMessage(text, type) {
+      const message = document.getElementById('message');
+      message.textContent = text;
+      message.className = `message ${type}`;
+      message.style.display = 'block';
+      setTimeout(() => { message.style.display = 'none'; }, 3000);
+    }
+
+    // Logout
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>

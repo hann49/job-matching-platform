@@ -24,15 +24,15 @@
   </style>
 </head>
 <body>
-  <nav>
-    <h1>Job Matching Platform</h1>
-    <div>
-      <a href="index.html">Home</a>
-      <a href="jobs.html">Jobs</a>
-      <a href="login.html">Login</a>
-      <a href="register.html">Register</a>
-    </div>
-  </nav>
+ <nav>
+  <h1>Job Matching Platform</h1>
+  <div>
+    <a href="index.html">Home</a>
+    <a href="jobs.html">Jobs</a>
+    <a href="profile.html">Profile</a>
+    <a onclick="logout()">Logout</a>
+  </div>
+</nav>
 
   <div class="container">
     <h2>All Jobs</h2>
@@ -66,6 +66,11 @@
     }
 
     loadJobs();
+function logout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  window.location.href = 'login.html';
+}
   </script>
 </body>
 </html>
