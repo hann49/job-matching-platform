@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, Request, UseGuards } from '@nestjs/common';
 import { ProfilesService } from './profiles.service';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -16,5 +16,23 @@ export class ProfilesController {
   @Post('me')
   async updateMyProfile(@Request() req, @Body() body) {
     return this.profilesService.createOrUpdateProfile(req.user.id, body);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('skills')
+  async addSkill(@Request() req, @Body('skill') skill: string) {
+    return this.profilesService.addSkill(req.user.id, skill);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('skills/:skill')
+  async removeSkill(@Request() req, @Param('skill') skill: string) {
+    return this.profilesService.removeSkill(req.user.id, skill);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('skills')
+  async getSkills(@Request() req) {
+    return this.profilesService.getSkills(req.user.id);
   }
 }

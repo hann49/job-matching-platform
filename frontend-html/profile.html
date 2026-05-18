@@ -110,7 +110,7 @@
       }
 
       // Display basic info
-      document.getElementById('profileName').textContent = user.name || 'Not set';
+      document.getElementById('profileName').textContent = user.fullName || 'Not set';
       document.getElementById('profileEmail').textContent = user.email || 'Not set';
       document.getElementById('profileRole').textContent = user.role === 'employer' ? 'Employer' : 'Job Seeker';
 

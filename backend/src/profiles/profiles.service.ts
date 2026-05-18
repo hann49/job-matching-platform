@@ -24,4 +24,37 @@ export class ProfilesService {
       return this.profilesRepository.save(newProfile);
     }
   }
+
+  async getSkills(userId: number): Promise<{ skills: string[] }> {
+    const profile = await this.getProfile(userId);
+    if (!profile || !profile.skills) return { skills: [] };
+    return { skills: profile.skills.split(',').filter(s => s.trim() !== '') };
+  }
+
+  async addSkill(userId: number, skill: string): Promise<{ skills: string[] }> {
+    const profile = await this.getProfile(userId);
+    let currentSkills: string[] = [];
+    if (profile && profile.skills) {
+      currentSkills = profile.skills.split(',').filter(s => s.trim() !== '');
+    }
+    if (!currentSkills.includes(skill)) {
+      currentSkills.push(skill);
+    }
+    await this.createOrUpdateProfile(userId, { skills: currentSkills.join(',') });
+    return { skills: currentSkills };
+  }
+
+  async removeSkill(userId: number, skill: string): Promise<{ skills: string[] }> {
+    const profile = await this.getProfile(userId);
+    let currentSkills: string[] = [];
+    if (profile && profile.skills) {
+      currentSkills = profile.skills.split(',').filter(s => s.trim() !== '' && s !== skill);
+    }
+    await this.createOrUpdateProfile(userId, { skills: currentSkills.join(',') });
+    return { skills: currentSkills };
+  }
+
+  async findAll(): Promise<Profile[]> {
+    return this.profilesRepository.find();
+  }
 }
