@@ -42,6 +42,23 @@
   </div>
 
   <script>
+  async function applyForJob(jobId) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please login first!');
+      window.location.href = 'login.html';
+      return;
+    }
+    const response = await fetch(`http://localhost:3001/applications/apply/${jobId}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (response.ok) {
+      alert('✅ Applied successfully!');
+    } else {
+      alert('❌ Something went wrong!');
+    }
+  }
     async function loadJobs() {
       const response = await fetch('http://localhost:3001/jobs');
       const jobs = await response.json();
@@ -60,7 +77,7 @@
             ${job.requiredSkills.map(skill => `<span class="skill">${skill}</span>`).join('')}
           </div>
           <p class="deadline">Deadline: ${new Date(job.deadline).toLocaleDateString()}</p>
-          <button class="btn">View & Apply</button>
+          <button class="btn" onclick="applyForJob(${job.id})">View & Apply</button>
         </div>
       `).join('');
     }

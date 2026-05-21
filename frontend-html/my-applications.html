@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Applications - Job Matching Platform</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f9fafb; }
+    nav { background: #4f46e5; padding: 16px 40px; display: flex; justify-content: space-between; align-items: center; }
+    nav h1 { color: white; font-size: 20px; }
+    nav a { color: white; text-decoration: none; margin-left: 20px; font-size: 15px; cursor: pointer; }
+    .container { max-width: 800px; margin: 40px auto; padding: 24px; }
+    h2 { color: #4f46e5; margin-bottom: 24px; font-size: 32px; }
+    .app-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+    .app-card h3 { color: #111827; font-size: 20px; margin-bottom: 8px; }
+    .app-card p { color: #6b7280; margin-bottom: 8px; }
+    .status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .status.pending { background: #fef3c7; color: #92400e; }
+    .status.accepted { background: #d1fae5; color: #065f46; }
+    .status.rejected { background: #fee2e2; color: #991b1b; }
+    .skills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .skill { background: #ede9fe; color: #4f46e5; padding: 4px 12px; border-radius: 20px; font-size: 13px; }
+    .empty { text-align: center; padding: 60px; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <nav>
+    <h1>Job Matching Platform</h1>
+    <div>
+      <a href="index.html">Home</a>
+      <a href="jobs.html">Jobs</a>
+      <a href="profile.html">Profile</a>
+      <a onclick="logout()">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h2>My Applications</h2>
+    <div id="applications-list"></div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'login.html';
+        return;
+      }
+      loadApplications();
+    };
+
+    async function loadApplications() {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3001/applications/my', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const applications = await response.json();
+      const container = document.getElementById('applications-list');
+
+      if (applications.length === 0) {
+        container.innerHTML = '<div class="empty"><h3>No applications yet!</h3><p>Go to the jobs page and apply for a job.</p></div>';
+        return;
+      }
+
+      container.innerHTML = applications.map(app => `
+        <div class="app-card">
+          <h3>${app.job.title}</h3>
+          <p>${app.job.description}</p>
+          <div class="skills">
+            ${app.job.requiredSkills.map(skill => `<span class="skill">${skill}</span>`).join('')}
+          </div>
+          <p>Deadline: ${new Date(app.job.deadline).toLocaleDateString()}</p>
+          <p>Applied: ${new Date(app.appliedAt).toLocaleDateString()}</p>
+          <span class="status ${app.status}">${app.status.toUpperCase()}</span>
+        </div>
+      `).join('');
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>
