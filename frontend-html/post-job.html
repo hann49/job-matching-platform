@@ -26,13 +26,14 @@
   </style>
 </head>
 <body>
-  <nav>
+<nav>
     <h1>Job Matching Platform</h1>
     <div>
       <a href="index.html">Home</a>
       <a href="jobs.html">Jobs</a>
-      <a href="login.html">Login</a>
-      <a href="register.html">Register</a>
+      <a href="post-job.html">Post Job</a>
+      <a href="employer-dashboard.html">Dashboard</a>
+      <a onclick="logout()">Logout</a>
     </div>
   </nav>
 
@@ -122,6 +123,11 @@
         message.className = 'message error';
         message.textContent = data.message || 'Something went wrong!';
       }
+    }
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = 'login.html';
     }
   </script>
 </body>

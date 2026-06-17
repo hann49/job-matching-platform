@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employer Dashboard - Job Matching Platform</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f9fafb; }
+    nav { background: #4f46e5; padding: 16px 40px; display: flex; justify-content: space-between; align-items: center; }
+    nav h1 { color: white; font-size: 20px; }
+    nav a { color: white; text-decoration: none; margin-left: 20px; font-size: 15px; cursor: pointer; }
+    .container { max-width: 900px; margin: 40px auto; padding: 24px; }
+    h2 { color: #4f46e5; margin-bottom: 24px; font-size: 32px; }
+    h3 { color: #374151; margin-bottom: 16px; font-size: 20px; }
+    .job-section { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+    .job-title { color: #4f46e5; font-size: 20px; font-weight: bold; margin-bottom: 4px; }
+    .job-meta { color: #6b7280; font-size: 14px; margin-bottom: 16px; }
+    .applicant-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .applicant-info h4 { color: #111827; margin-bottom: 4px; }
+    .applicant-info p { color: #6b7280; font-size: 14px; }
+    .status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; margin-bottom: 8px; }
+    .status.pending { background: #fef3c7; color: #92400e; }
+    .status.accepted { background: #d1fae5; color: #065f46; }
+    .status.rejected { background: #fee2e2; color: #991b1b; }
+    .action-buttons { display: flex; gap: 8px; }
+    .btn-accept { background: #10b981; color: white; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    .btn-accept:hover { background: #059669; }
+    .btn-reject { background: #ef4444; color: white; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    .btn-reject:hover { background: #dc2626; }
+    .no-applicants { color: #9ca3af; font-style: italic; padding: 16px 0; }
+    .empty { text-align: center; padding: 60px; color: #6b7280; }
+    .skills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .skill { background: #ede9fe; color: #4f46e5; padding: 2px 10px; border-radius: 20px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <h1>Job Matching Platform</h1>
+    <div>
+      <a href="index.html">Home</a>
+      <a href="post-job.html">Post Job</a>
+      <a href="employer-dashboard.html">Dashboard</a>
+      <a onclick="logout()">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h2>Employer Dashboard</h2>
+    <div id="jobs-container"></div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (!token || !user || user.role !== 'employer') {
+        alert('Please login as employer!');
+        window.location.href = 'login.html';
+        return;
+      }
+      loadJobsWithApplicants();
+    };
+
+    async function loadJobsWithApplicants() {
+      const token = localStorage.getItem('token');
+      const container = document.getElementById('jobs-container');
+
+      const jobsResponse = await fetch('http://localhost:3001/jobs');
+      const jobs = await jobsResponse.json();
+
+      if (jobs.length === 0) {
+        container.innerHTML = '<div class="empty"><h3>No jobs posted yet!</h3><p>Go to Post Job page to create your first job.</p></div>';
+        return;
+      }
+
+      container.innerHTML = '';
+
+      for (const job of jobs) {
+        const appResponse = await fetch(`http://localhost:3001/applications/job/${job.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const applicants = await appResponse.json();
+
+        const jobSection = document.createElement('div');
+        jobSection.className = 'job-section';
+        jobSection.innerHTML = `
+          <div class="job-title">${job.title}</div>
+          <div class="job-meta">📅 Deadline: ${new Date(job.deadline).toLocaleDateString()} | 👥 Applicants: ${applicants.length}</div>
+          <h3>Applicants</h3>
+          ${applicants.length === 0
+            ? '<p class="no-applicants">No applicants yet for this job.</p>'
+            : applicants.map(app => `
+              <div class="applicant-card" id="app-${app.id}">
+                <div class="applicant-info">
+                  <h4>👤 ${app.user?.fullName || 'Unknown'}</h4>
+                  <p>📧 ${app.user?.email || 'No email'}</p>
+                  <p>📅 Applied: ${new Date(app.appliedAt).toLocaleDateString()}</p>
+                  <span class="status ${app.status}" id="status-${app.id}">${app.status.toUpperCase()}</span>
+                </div>
+                <div class="action-buttons">
+                  <button class="btn-accept" onclick="updateStatus(${app.id}, 'accepted')">✅ Accept</button>
+                  <button class="btn-reject" onclick="updateStatus(${app.id}, 'rejected')">❌ Reject</button>
+                </div>
+              </div>
+            `).join('')
+          }
+        `;
+        container.appendChild(jobSection);
+      }
+    }
+
+    async function updateStatus(appId, status) {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3001/applications/${appId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status })
+      });
+
+      if (response.ok) {
+        const statusEl = document.getElementById(`status-${appId}`);
+        statusEl.textContent = status.toUpperCase();
+        statusEl.className = `status ${status}`;
+        alert(`✅ Application ${status} successfully!`);
+      } else {
+        alert('❌ Something went wrong!');
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>
